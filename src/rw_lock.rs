@@ -526,6 +526,7 @@ impl<'rwlock, T: ?Sized> DerefMut for RwLockWriteGuard<'rwlock, T> {
 impl<'rwlock, T: ?Sized> Drop for RwLockReadGuard<'rwlock, T> {
     fn drop(&mut self) {
         debug_assert!(self.lock.load(Ordering::Relaxed) & !(WRITER | UPGRADED) > 0);
+        println!("rw lock dropped");
         self.lock.fetch_sub(READER, Ordering::Release);
     }
 }
@@ -536,6 +537,7 @@ impl<'rwlock, T: ?Sized> Drop for RwLockUpgradeableGuard<'rwlock, T> {
             self.lock.load(Ordering::Relaxed) & (WRITER | UPGRADED),
             UPGRADED
         );
+        println!("rw lock dropped");
         self.lock.fetch_sub(UPGRADED, Ordering::AcqRel);
     }
 }
@@ -546,6 +548,7 @@ impl<'rwlock, T: ?Sized> Drop for RwLockWriteGuard<'rwlock, T> {
 
         // Writer is responsible for clearing both WRITER and UPGRADED bits.
         // The UPGRADED bit may be set if an upgradeable lock attempts an upgrade while this lock is held.
+        println!("rw lock dropped");
         self.lock.fetch_and(!(WRITER | UPGRADED), Ordering::Release);
     }
 }
